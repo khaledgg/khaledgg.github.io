@@ -14,19 +14,30 @@
 <body>
 
 <div id="questionnaire-1">
-    <p>Question 1: What's your favorite color?</p>
-    <input type="radio" name="q1_1" value="Red"> Red<br>
-    <input type="radio" name="q1_1" value="Blue"> Blue<br>
-    <input type="radio" name="q1_1" value="Green"> Green<br>
-    <!-- more initial questions -->
-    <p>Question 2: What's your favorite Name?</p>
-    <input type="radio" name="q1_2" value="Jim"> Jim<br>
-    <input type="radio" name="q1_2" value="John"> John<br>
-    <input type="radio" name="q1_2" value="Greg"> Greg<br>
+    <div class="question-group">
+        <p>Enter your ID (4 digits):</p>
+        <input type="text" id="uid" pattern="\d{4}" title="Four digit number" maxlength="4" required><br>
+    </div>
+    
+    <div class="question-group">
+        <p>Q1: Which ear is being recorded?</p>
+        <input type="radio" name="ear" value="L"> Left<br>
+        <input type="radio" name="ear" value="R"> Right<br>
+    </div>
+
+    <div class="question-group">
+        <p>Q2: How loud is the PT now, at time of recording (1-10 max)? </p>
+        <input type="range" id="noise-level" name="ptLvl" min="1" max="10" value="5" oninput="document.getElementById('noise-value').textContent = this.value">
+        <span id="noise-value">5</span><br>
+    </div>
+
     <button onclick="next(1)">Next</button>
+    <!-- <button id="next-button" onclick="next(1)" disabled>Next</button> -->
 </div>
 
 <div id="audio-recorder" style="display: none;">
+    <div id="timer">00:00</div>
+
     <button onclick="startRecording()">Record</button>
     <button onclick="stopRecording()" disabled>Stop</button>
     <audio id="audio-playback" controls style="display: none;"></audio>
@@ -34,15 +45,37 @@
 </div>
 
 <div id="questionnaire-2" style="display: none;">
-    <p>Question 2: What's your favorite animal?</p>
-    <input type="radio" name="q2_1" value="Dog"> Dog<br>
-    <input type="radio" name="q2_1" value="Cat"> Cat<br>
-    <input type="radio" name="q2_1" value="Bird"> Bird<br>
-    <!-- more post recording questions -->
-    <p>Question 2: What's your favorite car?</p>
-    <input type="radio" name="q2_2" value="Wheels"> Wheels<br>
-    <input type="radio" name="q2_2" value="Steer"> Steer<br>
-    <input type="radio" name="q2_2" value="7"> 7<br>
+    <p>After listening back to the recording, rate them based on the following, how similar does the recording match up to what you hear, from 1-5 with 5 being a perfect match.</p>
+    
+    <div class="question-group">
+        <p>Rhythm (1-5)</p>
+        <input type="radio" name="rhythm" value="1">1 <br>
+        <input type="radio" name="rhythm" value="2">2 <br>
+        <input type="radio" name="rhythm" value="3">3 <br>
+        <input type="radio" name="rhythm" value="4">4 <br>
+        <input type="radio" name="rhythm" value="5">5 <br>
+    </div>
+
+    <div class="question-group">
+        <p>Pitch (1-5)</p>
+        <input type="radio" name="pitch" value="1">1 <br>
+        <input type="radio" name="pitch" value="2">2 <br>
+        <input type="radio" name="pitch" value="3">3 <br>
+        <input type="radio" name="pitch" value="4">4 <br>
+        <input type="radio" name="pitch" value="5">5 <br>
+    </div>
+    
+    <div class="question-group">
+        <p>Overall (1-5)</p>
+        <input type="radio" name="overall" value="1">1 <br>
+        <input type="radio" name="overall" value="2">2 <br>
+        <input type="radio" name="overall" value="3">3 <br>
+        <input type="radio" name="overall" value="4">4 <br>
+        <input type="radio" name="overall" value="5">5 <br>
+    </div>
+
+    <!-- Buttons -->
+    
     <button onclick="downloadAudio()">Download Audio</button>
     <button onclick="complete()">Complete</button>
 </div>
@@ -52,6 +85,8 @@
 <script>
     let mediaRecorder;
     let audioBlob;
+    let recordingInterval;
+
 
     function next(step) {
         if(step == 1){
@@ -70,6 +105,7 @@
             .then(stream => {
                 mediaRecorder = new MediaRecorder(stream);
                 mediaRecorder.start();
+                updateTimer();  // Call to start the timer
 
                 document.querySelector('[onclick="stopRecording()"]').disabled = false;
                 document.querySelector('[onclick="startRecording()"]').disabled = true;
@@ -84,19 +120,38 @@
                     const audioUrl = URL.createObjectURL(audioBlob);
                     document.getElementById('audio-playback').src = audioUrl;
                     document.getElementById('audio-playback').style.display = 'block';
+                    clearInterval(recordingInterval);  // Stop the timer when recording stops
                 });
             });
+    }
+
+    function updateTimer() {
+        const timerElement = document.getElementById('timer');
+        let secondsElapsed = 0;
+
+        recordingInterval = setInterval(() => {
+            secondsElapsed += 1;
+            const minutes = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+            const seconds = (secondsElapsed % 60).toString().padStart(2, '0');
+            timerElement.textContent = `${minutes}:${seconds}`;
+        }, 1000);
     }
 
     function stopRecording() {
         mediaRecorder.stop();
         document.querySelector('[onclick="stopRecording()"]').disabled = true;
         document.querySelector('[onclick="startRecording()"]').disabled = false;
+        clearInterval(recordingInterval);  // Stop the timer when recording stops
     }
 
-    function complete() {
-        // Normally, you'd send questionnaire responses and audioBlob to the server
-        console.log('Questionnaire complete');
+    function getCurrentDateTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hour = String(now.getHours()).padStart(2, '0');
+        const minute = String(now.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}_${hour}-${minute}`;
     }
 
     function downloadAudio() {
@@ -114,20 +169,30 @@
         const answers = [];
         const radios1 = document.querySelectorAll('#questionnaire-1 input[type="radio"]');
         const radios2 = document.querySelectorAll('#questionnaire-2 input[type="radio"]');
+        const noiseLevel = document.getElementById('noise-level').value;
+        answers.push(`ptLvl-${noiseLevel}`); 
+      
         for (const radio of [...radios1, ...radios2]) {
             if (radio.checked) {
-                answers.push(radio.value);
+                answers.push(`${radio.name}_${radio.value}`);
             }
         }
         return answers.join('-');
     }
 
+    function getUserId() {
+        const userIdElement = document.getElementById('uid');
+        return userIdElement.value;
+    }
+
     function downloadAudio() {
         const answers = getAnswers();
+        const dateTime = getCurrentDateTime();
+        const userId = getUserId();
         const audioUrl = URL.createObjectURL(audioBlob);
         const a = document.createElement('a');
         a.href = audioUrl;
-        a.download = `recorded-audio-${answers}.mp3`;  // The file name now includes the answers
+        a.download = `recorded-audio-${userId}-${dateTime}-${answers}.mp3`;
         a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
@@ -135,7 +200,7 @@
     }
 
     function complete() {
-        // downloadAudio();  // Automatically download the audio when the questionnaire is complete
+        // downloadAudio();  // Automatically download the audio when the questionnaire is complete?
         console.log('Questionnaire complete');
     }
 </script>
