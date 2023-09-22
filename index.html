@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Questionnaire and Audio Recorder</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+    }
+</style>
+</head>
+<body>
+
+<div id="questionnaire-1">
+    <p>Question 1: What's your favorite color?</p>
+    <input type="radio" name="q1" value="Red"> Red<br>
+    <input type="radio" name="q1" value="Blue"> Blue<br>
+    <input type="radio" name="q1" value="Green"> Green<br>
+    <button onclick="next(1)">Next</button>
+</div>
+
+<div id="audio-recorder" style="display: none;">
+    <button onclick="startRecording()">Record</button>
+    <button onclick="stopRecording()" disabled>Stop</button>
+    <audio id="audio-playback" controls style="display: none;"></audio>
+    <button onclick="next(2)">Next</button>
+</div>
+
+<div id="questionnaire-2" style="display: none;">
+    <p>Question 2: What's your favorite animal?</p>
+    <input type="radio" name="q2" value="Dog"> Dog<br>
+    <input type="radio" name="q2" value="Cat"> Cat<br>
+    <input type="radio" name="q2" value="Bird"> Bird<br>
+    <button onclick="complete()">Complete</button>
+</div>
+
+<script>
+    let mediaRecorder;
+    let audioBlob;
+
+    function next(step) {
+        if(step == 1){
+            document.getElementById('questionnaire-1').style.display = 'none';
+            document.getElementById('audio-recorder').style.display = 'block';
+            document.getElementById('questionnaire-2').style.display = 'none';
+        } else if(step == 2) {
+            document.getElementById('questionnaire-1').style.display = 'none';
+            document.getElementById('audio-recorder').style.display = 'none';
+            document.getElementById('questionnaire-2').style.display = 'block';
+        }
+    }
+
+    function startRecording() {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+
+                document.querySelector('[onclick="stopRecording()"]').disabled = false;
+                document.querySelector('[onclick="startRecording()"]').disabled = true;
+
+                const audioChunks = [];
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+
+                mediaRecorder.addEventListener("stop", () => {
+                    audioBlob = new Blob(audioChunks);
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    document.getElementById('audio-playback').src = audioUrl;
+                    document.getElementById('audio-playback').style.display = 'block';
+                });
+            });
+    }
+
+    function stopRecording() {
+        mediaRecorder.stop();
+        document.querySelector('[onclick="stopRecording()"]').disabled = true;
+        document.querySelector('[onclick="startRecording()"]').disabled = false;
+    }
+
+    function complete() {
+        // Normally, you'd send questionnaire responses and audioBlob to the server
+        console.log('Questionnaire complete');
+    }
+</script>
+
+</body>
+</html>
