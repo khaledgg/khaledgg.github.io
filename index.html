@@ -15,9 +15,14 @@
 
 <div id="questionnaire-1">
     <p>Question 1: What's your favorite color?</p>
-    <input type="radio" name="q1" value="Red"> Red<br>
-    <input type="radio" name="q1" value="Blue"> Blue<br>
-    <input type="radio" name="q1" value="Green"> Green<br>
+    <input type="radio" name="q1_1" value="Red"> Red<br>
+    <input type="radio" name="q1_1" value="Blue"> Blue<br>
+    <input type="radio" name="q1_1" value="Green"> Green<br>
+    <!-- more initial questions -->
+    <p>Question 2: What's your favorite Name?</p>
+    <input type="radio" name="q1_2" value="Jim"> Jim<br>
+    <input type="radio" name="q1_2" value="John"> John<br>
+    <input type="radio" name="q1_2" value="Greg"> Greg<br>
     <button onclick="next(1)">Next</button>
 </div>
 
@@ -30,11 +35,19 @@
 
 <div id="questionnaire-2" style="display: none;">
     <p>Question 2: What's your favorite animal?</p>
-    <input type="radio" name="q2" value="Dog"> Dog<br>
-    <input type="radio" name="q2" value="Cat"> Cat<br>
-    <input type="radio" name="q2" value="Bird"> Bird<br>
+    <input type="radio" name="q2_1" value="Dog"> Dog<br>
+    <input type="radio" name="q2_1" value="Cat"> Cat<br>
+    <input type="radio" name="q2_1" value="Bird"> Bird<br>
+    <!-- more post recording questions -->
+    <p>Question 2: What's your favorite car?</p>
+    <input type="radio" name="q2_2" value="Wheels"> Wheels<br>
+    <input type="radio" name="q2_2" value="Steer"> Steer<br>
+    <input type="radio" name="q2_2" value="7"> 7<br>
+    <button onclick="downloadAudio()">Download Audio</button>
     <button onclick="complete()">Complete</button>
 </div>
+
+
 
 <script>
     let mediaRecorder;
@@ -83,6 +96,46 @@
 
     function complete() {
         // Normally, you'd send questionnaire responses and audioBlob to the server
+        console.log('Questionnaire complete');
+    }
+
+    function downloadAudio() {
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const a = document.createElement('a');
+        a.href = audioUrl;
+        a.download = 'recorded-audio.mp3';  // Specify the file name here
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+    
+    function getAnswers() {
+        const answers = [];
+        const radios1 = document.querySelectorAll('#questionnaire-1 input[type="radio"]');
+        const radios2 = document.querySelectorAll('#questionnaire-2 input[type="radio"]');
+        for (const radio of [...radios1, ...radios2]) {
+            if (radio.checked) {
+                answers.push(radio.value);
+            }
+        }
+        return answers.join('-');
+    }
+
+    function downloadAudio() {
+        const answers = getAnswers();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const a = document.createElement('a');
+        a.href = audioUrl;
+        a.download = `recorded-audio-${answers}.mp3`;  // The file name now includes the answers
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function complete() {
+        // downloadAudio();  // Automatically download the audio when the questionnaire is complete
         console.log('Questionnaire complete');
     }
 </script>
