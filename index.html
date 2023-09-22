@@ -138,11 +138,21 @@
     }
 
     function stopRecording() {
-        mediaRecorder.stop();
-        document.querySelector('[onclick="stopRecording()"]').disabled = true;
-        document.querySelector('[onclick="startRecording()"]').disabled = false;
-        clearInterval(recordingInterval);  // Stop the timer when recording stops
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.addEventListener('stop', () => {
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                
+                // Re-enable the start recording button
+                document.querySelector('[onclick="startRecording()"]').disabled = false;
+                // Disable the stop recording button
+                document.querySelector('[onclick="stopRecording()"]').disabled = true;
+                // Stop the timer
+                clearInterval(recordingInterval);
+            });
+            mediaRecorder.stop();
+        }
     }
+
 
     function getCurrentDateTime() {
         const now = new Date();
